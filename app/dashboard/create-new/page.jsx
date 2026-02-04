@@ -6,7 +6,9 @@ import SelectDuration from './_component/SelectDuration';
 import { Button } from '@/components/ui/button';
 import axios from 'axios';
 import CustomLoading from './_component/CustomLoading';
+import { v4 as uuidv4 } from 'uuid';
 
+const scriptData = 'It was a bright cold day in April, and the clocks were striking thirteen. Winston Smith, his chin nuzzled into his breast in an effort to escape the vile wind, slipped quickly through the glass doors of Victory Mansions, though not quickly enough to prevent a swirl of gritty dust from entering along with him. The hallway smelt of boiled cabbage and old rag mats. At one end of it a coloured poster, too large for indoor display, had been tacked to the wall. It depicted simply an enormous face, more than a metre wide: the'
 const CreateNew = () => {
   const[formData, setFormData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -16,9 +18,14 @@ const CreateNew = () => {
     ...prev,
     [fieldName]: fieldValue
   }));
+}
+
+const onClickCreateHandler=()=>{
+    //GetVideoScript();
+    downloadAudio(scriptData);
   }
   //get video script
- const GetVideoScript = async () => {
+const GetVideoScript = async () => {
   setLoading(true);
   const prompt =
     'Write a script to generate ' +
@@ -35,19 +42,48 @@ const CreateNew = () => {
     const res = await axios.post("/api/get-video-script", {
       prompt,
     });
+    //console.log(res.data.result);
 
-    console.log("API RESPONSE:", res.data.result);
     setVideoScript(res.data.result);
+    GenerateAudioFile(res.data.result);
   } catch (error) {
     console.error("ERROR:", error);
   }
   setLoading(false);
 };
 
+//generate audio file
+ const downloadAudio = async (scriptText) => {
+    try {
+      setLoading(true);
 
-  const onClickCreateHandler=()=>{
-    GetVideoScript();
-  }
+      const res = await fetch("/api/generate-audio", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ text: scriptText }),
+      });
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "output.wav"; // speechmatics returns wav
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Download Error:", error);
+    }
+
+    setLoading(false);
+  };
+
+  
 
   return (
     <div className='md:px-20'>
