@@ -36,7 +36,7 @@ const SelectStyle = ({ onUserSelect }) => {
                 key={index}
                 className={`relative hover:scale-105 transition-all cursor-pointer ${selectedOption==item.name&&'border-4 border-primary rounded-xl'}`}>
                     <Image src={item.image} alt={item.name} width={100} height={100}
-                    className='h-80 object-fit rounded-lg w-full'
+                    className='h-85 object-cover rounded-lg w-full'
                     onClick={() => {setSelectedOption(item.name)
                         onUserSelect('imageStyle', item.name)
                     }} />

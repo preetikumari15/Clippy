@@ -1,106 +1,175 @@
-"use client"
-import React, { useState } from 'react'
-import SelectTopic from './_component/SelectTopic'
-import SelectStyle from './_component/SelectStyle';
-import SelectDuration from './_component/SelectDuration';
-import { Button } from '@/components/ui/button';
-import axios from 'axios';
-import CustomLoading from './_component/CustomLoading';
-import { v4 as uuidv4 } from 'uuid';
+"use client";
+import React, { useContext, useEffect, useState } from "react";
+import SelectTopic from "./_component/SelectTopic";
+import SelectStyle from "./_component/SelectStyle";
+import SelectDuration from "./_component/SelectDuration";
+import { Button } from "@/components/ui/button";
+import axios from "axios";
+import CustomLoading from "./_component/CustomLoading";
+import { VideoDataContext } from "@/app/_context/VideoDataContext";
+import PlayerDialog from "../_component/PlayerDialog";
 
-const scriptData = 'It was a bright cold day in April, and the clocks were striking thirteen. Winston Smith, his chin nuzzled into his breast in an effort to escape the vile wind, slipped quickly through the glass doors of Victory Mansions, though not quickly enough to prevent a swirl of gritty dust from entering along with him. The hallway smelt of boiled cabbage and old rag mats. At one end of it a coloured poster, too large for indoor display, had been tacked to the wall. It depicted simply an enormous face, more than a metre wide: the'
 const CreateNew = () => {
-  const[formData, setFormData] = useState([]);
+  const [formData, setFormData] = useState({});
   const [loading, setLoading] = useState(false);
-  const [videoScript, setVideoScript] = useState();
+  const [imageList, setImageList] = useState([]);
+  const [playVideo, setPlayVideo] = useState(false);
+  const { videoData, setVideoData } = useContext(VideoDataContext);
+
   const onHandleInputChange = (fieldName, fieldValue) => {
-    setFormData((prev) => ({  
-    ...prev,
-    [fieldName]: fieldValue
-  }));
-}
+    setFormData((prev) => ({
+      ...prev,
+      [fieldName]: fieldValue,
+    }));
+  };
 
-const onClickCreateHandler=()=>{
-    //GetVideoScript();
-    downloadAudio(scriptData);
-  }
-  //get video script
-const GetVideoScript = async () => {
-  setLoading(true);
-  const prompt =
-    'Write a script to generate ' +
-    formData.duration +
-    ' video on topic: ' +
-    formData.topic +
-    ' along with Ai image prompt in ' +
-    formData.imageStyle +
-    ' format for each scene and give me result in JSON format with imagePrompt and ContentText as field, No plain text.';
+  const onClickCreateHandler = async () => {
+    await GetVideoScript();
+  };
 
-  console.log("PROMPT:", prompt);
+  // Restore from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem("videoData");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      setVideoData(parsed);
+      setImageList(parsed.imageList);
+    }
+  }, []);
 
-  try {
-    const res = await axios.post("/api/get-video-script", {
-      prompt,
-    });
-    //console.log(res.data.result);
+  // SCRIPT
+  const GetVideoScript = async () => {
+    setLoading(true);
 
-    setVideoScript(res.data.result);
-    GenerateAudioFile(res.data.result);
-  } catch (error) {
-    console.error("ERROR:", error);
-  }
-  setLoading(false);
-};
+    const prompt =
+      "Write a script to generate " +
+      formData.duration +
+      " video on topic: " +
+      formData.topic +
+      " along with Ai image prompt in " +
+      formData.imageStyle +
+      " format for each scene and give me result in JSON format with imagePrompt and ContentText as field, No plain text.";
 
-//generate audio file
- const downloadAudio = async (scriptText) => {
     try {
-      setLoading(true);
+      const res = await axios.post("/api/get-video-script", { prompt });
 
-      const res = await fetch("/api/generate-audio", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ text: scriptText }),
-      });
+      const scriptArray = res.data.result;
 
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
+      if (!Array.isArray(scriptArray)) {
+        console.log("Invalid Script:", scriptArray);
+        setLoading(false);
+        return;
+      }
 
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "output.wav"; // speechmatics returns wav
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+      const images = await generateImage(scriptArray);
+      const audioUrl = await generateAudio(scriptArray);
 
-      window.URL.revokeObjectURL(url);
+      const finalVideoData = {
+        videoScript: scriptArray,
+        imageList: images,
+        audioFileUrl: audioUrl,
+      };
+
+      setVideoData(finalVideoData);
+      localStorage.setItem(
+        "videoData",
+        JSON.stringify({
+          videoScript: scriptArray,
+          imageList: images,
+          audioFileUrl: audioUrl,
+        }),
+      );
+
+      setPlayVideo(true);
     } catch (error) {
-      console.error("Download Error:", error);
+      console.error(error);
     }
 
     setLoading(false);
   };
 
-  
+  // AUDIO
+  const generateAudio = async (scriptArray) => {
+    try {
+      const fullScript = scriptArray.map((i) => i.ContentText).join(" ");
+
+      const res = await fetch("/api/generate-audio", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: fullScript }),
+      });
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      return url;
+    } catch (e) {
+      console.log("Audio Crash:", e);
+      return "";
+    }
+  };
+
+  //  IMAGE
+  const blobToBase64 = (blob) =>
+    new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.readAsDataURL(blob);
+    });
+
+  const generateImage = async (videoScriptData) => {
+    let images = [];
+
+    for (const scene of videoScriptData) {
+      try {
+        const response = await fetch(
+          "https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-xl-base-1.0",
+          {
+            method: "POST",
+            headers: {
+              Authorization: "Bearer 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",
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ inputs: scene.imagePrompt }),
+          },
+        );
+
+        const blob = await response.blob();
+        const base64 = await blobToBase64(blob);
+        images.push(base64);
+      } catch (e) {
+        console.log("Image error:", e);
+      }
+    }
+
+    setImageList(images);
+    return images;
+  };
 
   return (
-    <div className='md:px-20'>
-      <h2 className='font-bold text-primary text-4xl text-center'>Create New</h2>
-      <div className='mt-10 shadow-md p-10'>
-        {/* Select topic */}
-        <SelectTopic onUserSelect={onHandleInputChange} />
-        {/* Select style */}
-        <SelectStyle onUserSelect={onHandleInputChange} />
-        {/* Duration */}
-        <SelectDuration onUserSelect={onHandleInputChange} />
-        {/* Create button */}
-        <Button onClick={onClickCreateHandler} className='mt-10 w-full hover:bg-purple-900 hover:cursor-pointer font-bold'>Create short video</Button>
-      </div>
-      <CustomLoading loading={loading} />
-    </div>
-  )
-}
+    <div className="md:px-20">
+      <h2 className="font-bold text-primary text-4xl text-center">
+        Create New
+      </h2>
 
-export default CreateNew
+      <div className="mt-10 shadow-md p-10">
+        <SelectTopic onUserSelect={onHandleInputChange} />
+        <SelectStyle onUserSelect={onHandleInputChange} />
+        <SelectDuration onUserSelect={onHandleInputChange} />
+
+        <Button
+          onClick={onClickCreateHandler}
+          className="mt-10 w-full font-bold"
+        >
+          Create short video
+        </Button>
+      </div>
+
+      <CustomLoading loading={loading} />
+
+      <PlayerDialog playVideo={playVideo} videoData={videoData} />
+    </div>
+  );
+};
+
+export default CreateNew;

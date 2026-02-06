@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { AlertDialog as AlertDialogPrimitive } from "radix-ui"
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -55,6 +56,9 @@ function AlertDialogContent({
           className
         )}
         {...props} />
+        <VisuallyHidden>
+    <AlertDialogTitle>Export Video</AlertDialogTitle>
+  </VisuallyHidden>
     </AlertDialogPortal>
   );
 }

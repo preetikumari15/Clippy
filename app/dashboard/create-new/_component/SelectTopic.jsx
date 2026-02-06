@@ -3,7 +3,6 @@ import React, { useState } from 'react'
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,

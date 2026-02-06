@@ -10,12 +10,31 @@ export async function generateScript(prompt) {
     contents: [
       {
         role: "user",
-        parts: [{ text: prompt }],
+        parts: [
+          {
+            text:
+              prompt +
+              "\n\nReturn ONLY pure JSON array. No markdown. No explanation.",
+          },
+        ],
       },
     ],
   });
 
-  return response.candidates?.[0]?.content?.parts?.[0]?.text || "";
+  let text =
+    response.candidates?.[0]?.content?.parts?.[0]?.text || "";
+
+  // Remove markdown fences if Gemini still adds
+  text = text.replace(/```json|```/g, "").trim();
+
+  try {
+    const parsed = JSON.parse(text);
+    return parsed; // <-- RETURN ARRAY
+  } catch (e) {
+    console.error("Gemini JSON Parse Failed:", text);
+    return [];
+  }
+
 }
 
 

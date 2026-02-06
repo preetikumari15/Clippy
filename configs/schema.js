@@ -1,4 +1,4 @@
-import { boolean, serial, varchar } from "drizzle-orm/pg-core";
+import { boolean, json, serial, varchar } from "drizzle-orm/pg-core";
 import { pgTable } from "drizzle-orm/pg-core";
 
 export const Users = pgTable("users", {

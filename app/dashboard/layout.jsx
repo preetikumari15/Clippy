@@ -1,21 +1,20 @@
-import React from 'react'
-import Header from './_component/Header'
-import SideNav from './_component/SideNav'
+"use client";
+import React, { useState } from "react";
+import Header from "./_component/Header";
+import { VideoDataContext } from "../_context/VideoDataContext";
 
 function DashboardLayout({ children }) {
+  const [videoData, setVideoData] = useState([]);
   return (
-    <div>
-        <div className='hidden md:block h-screen bg-white fixed mt-[65px] w-64'>
-            <SideNav />
+    <VideoDataContext.Provider value={{ videoData, setVideoData }}>
+      <div>
+        <Header />
+        <div className="mx-5 md:mx-20 my-10">
+            {children}
         </div>
-        <div>
-            <Header />
-            <div className='md:ml-64 p-10'>
-                {children}
-            </div>
-        </div>
-    </div>
-  )
+      </div>
+    </VideoDataContext.Provider>
+  );
 }
 
-export default DashboardLayout
+export default DashboardLayout;
