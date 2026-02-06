@@ -127,7 +127,7 @@ const CreateNew = () => {
           {
             method: "POST",
             headers: {
-              Authorization: "Bearer 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",
+              Authorization: `Bearer ${process.env.HF_API_KEY}`,
               "Content-Type": "application/json",
             },
             body: JSON.stringify({ inputs: scene.imagePrompt }),

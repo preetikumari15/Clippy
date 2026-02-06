@@ -41,7 +41,7 @@ export default function Home() {
         </div>
       </nav>
 
-      <section className="flex flex-col items-center justify-center text-center py-24 px-6 bg-gradient-to-b from-purple-50 to-white">
+      <section className="flex flex-col items-center justify-center text-center py-24 px-6 bg-linear-to-b from-purple-50 to-white">
         <div className="inline-flex items-center gap-2 bg-purple-100 text-purple-700 px-4 py-2 rounded-full text-sm font-semibold mb-6 animate-fade-in">
           <Sparkles className="h-4 w-4" /> #1 AI Video Generator
         </div>
@@ -63,7 +63,7 @@ export default function Home() {
 
         {/* Dashboard Preview */}
         <div className="mt-20 relative w-full max-w-5xl aspect-video rounded-2xl shadow-2xl border-4 border-white bg-gray-900 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-tr from-purple-900 to-gray-900 flex items-center justify-center">
+          <div className="absolute inset-0 bg-linear-to-tr from-purple-900 to-gray-900 flex items-center justify-center">
             <h3 className="text-white/20 text-4xl font-bold">
               Dashboard Preview
             </h3>
