@@ -6,6 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Video, Wand2, Share2, Sparkles, CheckCircle2 } from "lucide-react";
 import { UserButton, useUser } from "@clerk/nextjs";
 
+const images = [
+  "https://picsum.photos/300/400?random=1",
+  "https://picsum.photos/300/400?random=2",
+  "https://picsum.photos/300/400?random=3",
+  "https://picsum.photos/300/400?random=4",
+  "https://picsum.photos/300/400?random=5",
+  "https://picsum.photos/300/400?random=6",
+];
+
 export default function Home() {
   const { isSignedIn } = useUser();
 
@@ -62,11 +71,73 @@ export default function Home() {
         </Link>
 
         {/* Dashboard Preview */}
-        <div className="mt-20 relative w-full max-w-5xl aspect-video rounded-2xl shadow-2xl border-4 border-white bg-gray-900 overflow-hidden">
-          <div className="absolute inset-0 bg-linear-to-tr from-purple-900 to-gray-900 flex items-center justify-center">
-            <h3 className="text-white/20 text-4xl font-bold">
-              Dashboard Preview
-            </h3>
+        <div className="mt-20 relative w-full max-w-5xl h-125 rounded-2xl shadow-2xl border-4 border-white bg-black overflow-hidden flex justify-center items-center">
+          <div className="absolute inset-0 z-20 pointer-events-none bg-linear-to-b from-gray-900 via-transparent to-gray-900"></div>
+
+          {/* The Grid of Flowing Columns */}
+          <div className="grid grid-cols-3 md:grid-cols-4 gap-3 w-full h-[150%] -rotate-2 scale-110 opacity-95">
+            {/* Column 1 - Flowing UP */}
+            <div className="flex flex-col gap-3 animate-scroll-up">
+              {[...images, ...images, ...images].map((src, i) => (
+                <div
+                  key={i}
+                  className="relative w-full h-48 rounded-lg overflow-hidden shadow-md shadow-yellow-200"
+                >
+                  <Image src={src} alt="AI" fill className="object-cover" />
+                </div>
+              ))}
+            </div>
+
+            {/* Column 2 - Flowing DOWN */}
+            <div className="flex flex-col gap-3 animate-scroll-down">
+              {[...images, ...images, ...images].map((src, i) => (
+                <div
+                  key={i}
+                  className="relative w-full h-64 rounded-lg overflow-hidden shadow-md shadow-yellow-200"
+                >
+                  <Image
+                    src={`https://picsum.photos/300/500?random=${i + 25}`}
+                    alt="AI"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* Column 3 - Flowing UP */}
+            <div className="flex flex-col gap-3 animate-scroll-up">
+              {[...images, ...images, ...images].map((src, i) => (
+                <div
+                  key={i}
+                  className="relative w-full h-48 rounded-lg overflow-hidden shadow-md shadow-yellow-200"
+                >
+                  <Image
+                    src={`https://picsum.photos/300/400?random=${i + 50}`}
+                    alt="AI"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* Column 4- Flowing DOWN */}
+            <div className="hidden md:flex flex-col gap-3 animate-scroll-down">
+              {[...images, ...images, ...images].map((src, i) => (
+                <div
+                  key={i}
+                  className="relative w-full h-56 rounded-lg overflow-hidden shadow-md shadow-yellow-200"
+                >
+                  <Image
+                    src={`https://picsum.photos/300/400?random=${i + 10}`}
+                    alt="AI"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
