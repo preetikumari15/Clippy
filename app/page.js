@@ -30,7 +30,7 @@ export default function Home() {
           {isSignedIn ? (
             <Link href={"/dashboard"}>
               <Button className="bg-purple-600 hover:bg-purple-700 text-white">
-                Go to Dashboard
+                Dashboard
               </Button>
             </Link>
           ) : (
