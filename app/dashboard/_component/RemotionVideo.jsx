@@ -1,35 +1,32 @@
-import React, { useEffect } from 'react'
-import { AbsoluteFill, Audio, Img, Sequence, useVideoConfig } from 'remotion'
+"use client";
+import { AbsoluteFill, Audio, Img, Sequence, useVideoConfig } from "remotion";
 
-const RemotionVideo = ({ imageList = [], audioFileUrl, setDurationInFrame }) => {
+const RemotionVideo = ({ imageList = [], audioFileUrl, duration = 10 }) => {
   const { fps } = useVideoConfig();
 
-  const duration = imageList.length > 0 ? imageList.length * 60 : 60;
-
-  useEffect(() => {
-    setDurationInFrame(duration);
-  }, [duration]);
+  const totalFrames = duration * fps;
+  const framesPerImage = Math.floor(totalFrames / imageList.length);
 
   return (
-    <AbsoluteFill className='bg-black'>
+    <AbsoluteFill>
+      {imageList?.map((item, i) => {
+        if (!item || !item.startsWith("data:image")) return null;
 
-      {imageList.length > 0 &&
-        imageList.map((item, index) => (
-          <Sequence key={index} from={index * 60} durationInFrames={60}>
+        return (
+          <Sequence
+            key={i}
+            from={i * framesPerImage}
+            durationInFrames={framesPerImage}
+          >
             <Img
               src={item}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover'
-              }}
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
             />
           </Sequence>
-        ))
-      }
-
+        );
+      })}
       {audioFileUrl && <Audio src={audioFileUrl} />}
-
+      console.log("Audio SRC:", audioFileUrl);
     </AbsoluteFill>
   );
 };

@@ -68,6 +68,7 @@ const CreateNew = () => {
         videoScript: scriptArray,
         imageList: images,
         audioFileUrl: audioUrl,
+        duration: parseInt(formData.duration),
       };
 
       setVideoData(finalVideoData);
@@ -77,6 +78,7 @@ const CreateNew = () => {
           videoScript: scriptArray,
           imageList: images,
           audioFileUrl: audioUrl,
+          duration: parseInt(formData.duration),
         }),
       );
 
@@ -90,23 +92,23 @@ const CreateNew = () => {
 
   // AUDIO
   const generateAudio = async (scriptArray) => {
-    try {
-      const fullScript = scriptArray.map((i) => i.ContentText).join(" ");
+    const fullScript = scriptArray.map((s) => s.ContentText).join(" ");
 
-      const res = await fetch("/api/generate-audio", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: fullScript }),
-      });
+    const res = await fetch("/api/generate-audio", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: fullScript }),
+    });
 
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
+    const blob = await res.blob();
 
-      return url;
-    } catch (e) {
-      console.log("Audio Crash:", e);
-      return "";
+    if (!blob.type.startsWith("audio/")) {
+      console.log("Invalid audio");
+      return null;
     }
+
+    const base64 = await blobToBase64(blob);
+    return base64;
   };
 
   //  IMAGE
@@ -127,18 +129,32 @@ const CreateNew = () => {
           {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${process.env.HF_API_KEY}`,
+              Authorization: `Bearer ${process.env.NEXT_PUBLIC_HF_API_KEY}`,
               "Content-Type": "application/json",
             },
             body: JSON.stringify({ inputs: scene.imagePrompt }),
           },
         );
 
+        if (!response.ok) {
+          const errText = await response.text();
+          throw new Error(`HF Error: ${response.status} - ${errText}`);
+        }
+
         const blob = await response.blob();
+
+        if (!blob.type.startsWith("image/")) {
+          console.log("Skipped invalid image:", blob.type);
+          continue; // DO NOT PUSH
+        }
+
         const base64 = await blobToBase64(blob);
         images.push(base64);
       } catch (e) {
         console.log("Image error:", e);
+        throw new Error(
+          "Image generation failed. Image Generation quota may be exceeded.",
+        );
       }
     }
 
